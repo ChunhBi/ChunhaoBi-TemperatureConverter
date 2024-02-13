@@ -8,9 +8,9 @@ import android.widget.SeekBar
 import com.example.part3temperatureconverter.databinding.ActivityMainBinding
 
 const val MAX_CELCIUS = 100f
-const val MIN_CELCIUS = 0
+const val MIN_CELCIUS = 0f
 const val MAX_FAHRENHEIT = 212f
-const val MIN_FAHRENHEIT = 0
+const val MIN_FAHRENHEIT = 0f
 const val COLD_CELCIUS = 20
 const val HOT_CELCIUS = 80
 
@@ -24,81 +24,39 @@ class MainActivity : AppCompatActivity() {
 
         binding.celciusBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                // Update the TextView with the current SeekBar value
-                val value:Float = (MAX_CELCIUS-MIN_CELCIUS)*progress/100f
-                setViewWithCelcius(value,progress)
-                reactWithCelcius(fahrenheitToCelcius(value))
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
             }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (seekBar == null) return
+                val progress = seekBar.progress
+                val value:Float = (MAX_CELCIUS-MIN_CELCIUS)*progress/100f
+                binding.celciusValue.setText(value.toString())
+                binding.fahrenheitValue.setText(celciusToFahrenheit(value).toString())
+                binding.fahrenheitBar.setProgress((celciusToFahrenheit(value) * 100f / (MAX_FAHRENHEIT- MIN_FAHRENHEIT)).toInt())
+                reactWithCelcius(value)
             }
         })
         binding.fahrenheitBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                // Update the TextView with the current SeekBar value
-                val value:Float = (MAX_FAHRENHEIT- MIN_FAHRENHEIT)*progress/100f
-                setViewWithCelcius(fahrenheitToCelcius(value),progress)
-                reactWithCelcius(fahrenheitToCelcius(value))
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
             }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (seekBar == null) return
+                val progress = seekBar.progress
+                var value:Float = (MAX_FAHRENHEIT- MIN_FAHRENHEIT)*progress/100f
+                val minFahrenheit = celciusToFahrenheit(MIN_CELCIUS)
+                if (value < minFahrenheit) {
+                    value = minFahrenheit
+                    binding.fahrenheitBar.setProgress((minFahrenheit * 100f / (MAX_FAHRENHEIT- MIN_FAHRENHEIT)).toInt())
+                }
+                binding.celciusValue.setText(fahrenheitToCelcius(value).toString())
+                binding.fahrenheitValue.setText(value.toString())
+                binding.celciusBar.setProgress((fahrenheitToCelcius(value) * 100f / (MAX_CELCIUS- MIN_CELCIUS)).toInt())
+                reactWithCelcius(fahrenheitToCelcius(value))
             }
         })
-//        val textWatcher1 = object : TextWatcher {
-//            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-//            }
-//            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-//                try {
-//                    val value = s.toString().toFloat()
-//                    if (value < MIN_CELCIUS || value > MAX_CELCIUS) {
-//                        binding.interestingMsg.setText("Celcius range: 0 - 100")
-//                        return
-//                    }
-//                    val progress = (value * 100 / (MAX_CELCIUS-MIN_CELCIUS)).toInt()
-//                    binding.celciusValue.removeTextChangedListener(this)
-//                    setViewWithCelcius(value, progress)
-//                    binding.celciusValue.addTextChangedListener(this)
-//                }
-//                catch (e:Exception){
-//                    binding.interestingMsg.setText("Invalid input!")
-//                }
-//            }
-//            override fun afterTextChanged(s: Editable?) {
-//            }
-//        }
-//        binding.celciusValue.addTextChangedListener (textWatcher1)
-//        val textWatcher2 = object : TextWatcher {
-//            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-//            }
-//            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-//                try {
-//                    val value = s.toString().toFloat()
-//                    if (value < MIN_FAHRENHEIT || value > MAX_FAHRENHEIT) {
-//                        binding.interestingMsg.setText("Fahrenheit range: 0 - 100")
-//                        return
-//                    }
-//                    val progress = (value * 100 / (MAX_FAHRENHEIT-MIN_FAHRENHEIT)).toInt()
-//                    binding.fahrenheitValue.removeTextChangedListener(this)
-//                    setViewWithCelcius(fahrenheitToCelcius(value), progress)
-//                    binding.fahrenheitValue.addTextChangedListener(this)
-//                }
-//                catch (e:Exception){
-//                    binding.interestingMsg.setText("Invalid input!")
-//                }
-//            }
-//            override fun afterTextChanged(s: Editable?) {
-//            }
-//        }
-//        binding.fahrenheitValue.addTextChangedListener (textWatcher2)
-    }
-
-    private fun setViewWithCelcius(value:Float, progress:Int) {
-        binding.celciusValue.setText(value.toString())
-        binding.fahrenheitValue.setText(celciusToFahrenheit(value).toString())
-        binding.celciusBar.setProgress(progress)
-        binding.fahrenheitBar.setProgress(progress)
     }
     private fun reactWithCelcius(value:Float) {
         if (value <= COLD_CELCIUS) {
@@ -106,6 +64,9 @@ class MainActivity : AppCompatActivity() {
         }
         else if (value >= HOT_CELCIUS) {
             binding.interestingMsg.setText("I wish it were colder")
+        }
+        else{
+            binding.interestingMsg.setText("Pleasant temperature")
         }
     }
     private fun celciusToFahrenheit(value:Float): Float {
